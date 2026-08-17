@@ -1,109 +1,186 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import "./App.css";
-import { fetchCategories, fetchRecipesByName } from "../src/utils.js";
+import {
+  fetchCategories,
+  fetchRecipesByName,
+  fetchRecipesByCategory,
+  fetchRecipesDetails,
+} from "../src/utils.js";
 import Card from "./components/Card.jsx";
 import Categories from "./components/Categories.jsx";
+import { Toaster, toast } from "react-hot-toast";
+import CardSkeleton from "./components/CardSkeleton.jsx";
+import CardModal from "./components/CardModal.jsx";
+import { RecipesContext } from "./context/RecipesContext.jsx";
 
 function App() {
   const [recipes, setRecipes] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const { categories } = useContext(RecipesContext);
+  const [searchTxt, setSearchTxt] = useState("");
+  const [selectedCategorie, setSelectedCategorie] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [selectedRecipe, setSelectedRecipe] = useState("");
+  const [startRecipe, setStartRecipe] = useState(false);
 
-  useEffect(() => {
-    async function loadRecipes() {
-      const res = await fetchRecipesByName("meat");
+  async function recipeDetails(recipes) {
+    const res = await fetchRecipesDetails(recipes.idMeal);
+    setSelectedRecipe(res[0]);
+    const stored = localStorage.getItem(
+      `app-receitas.recipe.${recipes.idMeal}`,
+    );
+    setStartRecipe(stored !== null); //esse stored estar aqui no App.jsx foi a IA que botou, não consegui resolver lá no CardModal
+  }
+
+  // uso correto o try catch? Ou tem uma forma melhor?
+  //essas async function tem que estar dentro do useEffect?
+  async function searchRecipes() {
+    try {
+      setRecipes([]);
+      setSelectedCategorie(null);
+      setLoading(true);
+      const res = await fetchRecipesByName(searchTxt);
+      res === null
+        ? toast.error("Nenhum resultado encontrado")
+        : setRecipes(res);
+    } catch (err) {
+      toast.error("Erro de conexão, tente novamente");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleChange(event) {
+    setSearchTxt(event.target.value);
+  }
+
+  function handleSearchClick(e) {
+    e.preventDefault();
+    searchTxt ? searchRecipes() : toast.error("ERRO FATAL");
+  }
+
+  function handleCloseModal() {
+    setSelectedRecipe("");
+    setStartRecipe(false);
+  }
+
+  // uso correto o try catch? Ou tem uma forma melhor?
+  async function handleCategorieButton(categorieName) {
+    try {
+      setRecipes([]);
+      setLoading(true);
+      const res = await fetchRecipesByCategory(categorieName);
       setRecipes(res);
+      setSelectedCategorie(categorieName);
+    } catch (err) {
+      toast.error("Erro de conexão, tente novamente");
+    } finally {
+      setLoading(false);
     }
-    loadRecipes();
-  }, []);
-
-  useEffect(() => {
-    async function loadCategories() {
-      const res = await fetchCategories();
-      setCategories(res);
-    }
-    loadCategories();
-  }, []);
+  }
 
   return (
     <>
-      <header class="header">
-        <div class="header__inner">
-          <h1 class="header__title">
-            <span class="header__icon">🍽️</span>
+      <div
+        className={selectedRecipe ? "overlay" : ""}
+        onClick={handleCloseModal}
+      ></div>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: "#1e1e2f",
+            color: "#fff",
+          },
+          success: {
+            style: { background: "#16a34a", color: "#fff" },
+            iconTheme: { primary: "#fff", secondary: "#16a34a" },
+          },
+          error: {
+            style: { background: "#dc2626", color: "#fff" },
+            iconTheme: { primary: "#fff", secondary: "#dc2626" },
+          },
+        }}
+      />
+      <header className="header">
+        <div className="header__inner">
+          <h1 className="header__title">
+            <span className="header__icon">🍽️</span>
             Receitas do Mundo
           </h1>
-          <p class="header__subtitle">
+          <p className="header__subtitle">
             Explore receitas de qualquer lugar do planeta
           </p>
         </div>
       </header>
 
-      <main class="main">
-        {/* /* Barra de busca */}
-        <section class="search-section">
-          <div class="search-wrapper">
+      <main className={"main"}>
+        <section className="search-section">
+          <form className="search-wrapper">
             <input
               type="text"
               id="search-input"
-              class="search-input"
+              className="search-input"
               placeholder="Buscar receita... ex: pasta, chicken, soup"
               aria-label="Campo de busca de receitas"
+              value={searchTxt}
+              onChange={handleChange}
+              required
             />
-            <button id="search-btn" class="search-btn" aria-label="Buscar">
+            {/*isso tá ok?*/}
+            {searchTxt.length > 0 && searchTxt.length < 3 && (
+              <span className="search__error-msg">
+                Digite pelo menos 3 caracteres
+              </span>
+            )}
+            <button
+              id="search-btn"
+              className="search-btn"
+              aria-label="Buscar"
+              onClick={handleSearchClick}
+              disabled={searchTxt.length > 0 && searchTxt.length < 3}
+            >
               Buscar
             </button>
-          </div>
+          </form>
         </section>
 
         {/* <!-- Filtros de categoria --> */}
-        <section class="categories-section">
-          <h2 class="section-title">Categorias</h2>
+        <section className="categories-section">
+          <h2 className="section-title">Categorias</h2>
           <div
             id="categories"
-            class="categories"
+            className="categories"
             role="list"
             aria-label="Filtros por categoria"
           >
-            {categories.map((categorie) => {
-              <Categories
-                id={categorie.idCategory}
-                name={categorie.strCategory}
-              />;
-            })}
-            {/* <!-- Gerado via JS --> */}
+            {categories &&
+              categories.map((categorie) => (
+                <Categories
+                  id={categorie.idCategory}
+                  className={
+                    selectedCategorie === categorie.strCategory
+                      ? "categorie__button-active"
+                      : ""
+                  }
+                  name={categorie.strCategory}
+                  categorieFunction={() =>
+                    handleCategorieButton(categorie.strCategory)
+                  }
+                />
+              ))}
           </div>
         </section>
 
-        {/* <!-- Estado: carregando --> */}
-        <div id="loading" class="state-loading" hidden aria-live="polite">
-          <div class="spinner" aria-hidden="true"></div>
-          <p>Buscando receitas...</p>
-        </div>
-
-        {/* <!-- Estado: erro --> */}
-        <div id="error" class="state-error" hidden role="alert">
-          <span class="state-error__icon">⚠️</span>
-          <p id="error-message" class="state-error__message"></p>
-          <button id="retry-btn" class="retry-btn">
-            Tentar novamente
-          </button>
-        </div>
-
-        {/* <!-- Estado: sem resultados --> */}
-        <div id="empty" class="state-empty" hidden aria-live="polite">
-          <span class="state-empty__icon">🔍</span>
-          <p>Nenhuma receita encontrada.</p>
-          <p class="state-empty__hint">Tente outro termo ou outra categoria.</p>
-        </div>
-
         {/* <!-- Grid de receitas --> */}
-        <section class="recipes-section">
-          <h2 id="recipes-title" class="section-title">
+        <section className="recipes-section">
+          <h2 id="recipes-title" className="section-title">
             Receitas
           </h2>
+          {/* tentativa de adicionar um loading kkkkk */}
+          {loading && <CardSkeleton />}
           <div
             id="recipes-grid"
-            class="recipes-grid"
+            className="recipes-grid"
             role="list"
             aria-label="Lista de receitas"
           >
@@ -112,15 +189,26 @@ function App() {
                 id={recipe.idMeal}
                 title={recipe.strMeal}
                 image={recipe.strMealThumb}
+                modalFunction={() => {
+                  recipeDetails(recipe);
+                }}
               />
             ))}
-            {/* <!-- Gerado via JS --> */}
           </div>
         </section>
+        <section>
+          {selectedRecipe && (
+            <CardModal
+              recipe={selectedRecipe}
+              handleCloseModal={handleCloseModal}
+              setStartRecipe={setStartRecipe}
+              startRecipe={startRecipe}
+            />
+          )}
+        </section>
       </main>
-
-      <footer class="footer">
-        <p>
+      <footer className="footer">
+        <p className="footer-text">
           Dados fornecidos pela{" "}
           <a href="https://www.themealdb.com" target="_blank" rel="noopener">
             TheMealDB

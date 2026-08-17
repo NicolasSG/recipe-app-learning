@@ -7,7 +7,7 @@ export async function fetchRecipesByName(name) {
     })
     .then((data) => data.meals)
     .catch((err) => {
-      console.log(err);
+      throw err;
     });
 
   // Endpoint: /search.php?s={name}
@@ -22,7 +22,7 @@ export async function fetchCategories() {
     })
     .then((data) => data.categories)
     .catch((err) => {
-      console.log(err);
+      throw err;
     });
   // Endpoint: /categories.php
   // Retorna: lista de categorias
@@ -36,9 +36,20 @@ export async function fetchRecipesByCategory(category) {
     })
     .then((data) => data.meals)
     .catch((err) => {
-      console.log(err);
+      throw err;
     });
   // Endpoint: /filter.php?c={category}
   // Retorna: lista de receitas da categoria (sem detalhes completos)
   // TODO
+}
+
+export async function fetchRecipesDetails(category) {
+  return fetch(`${BASE_URL}/lookup.php?i=${category}`)
+    .then((res) => {
+      return res.json();
+    })
+    .then((data) => data.meals)
+    .catch((err) => {
+      throw err;
+    });
 }
