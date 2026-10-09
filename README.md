@@ -1,95 +1,80 @@
-# 🍽️ App de Receitas — Projetos de Aprendizado
+# 🍽️ Receitas do Mundo
 
-Bem-vindo ao repositório de propostas de dois projetos que exploram o mesmo tema: um **app de receitas** consumindo a [TheMealDB API](https://www.themealdb.com).
+Aplicação web para explorar receitas de vários países, buscar por nome, filtrar por categoria e acompanhar o passo a passo marcando os ingredientes. Projeto de portfólio desenvolvido com React, consumindo a [TheMealDB API](https://www.themealdb.com).
 
-A ideia é oferecer dois caminhos de aprendizado com diferentes níveis de estrutura e autonomia.
+**Demo:** https://nicolassg.github.io/recipe-app-learning/
 
----
+## Funcionalidades
 
-## 📂 Estrutura do Repositório
+- **Busca por nome** com validação de mínimo de 3 caracteres (o erro aparece só depois de clicar em Buscar, sem mover o layout).
+- **Filtro por categoria**: a página já abre com a categoria Beef carregada.
+- **Cards de receita** com elevação no hover (só em dispositivos com mouse) e botão para abrir os detalhes.
+- **Modal de receita** com imagem, nome, instruções e botão "Iniciar receita".
+- **Lista de ingredientes interativa**: ao iniciar, o painel de ingredientes abre ao lado do modal com transição suave. Os ingredientes marcados e o estado "receita iniciada" ficam salvos no `localStorage`, então a receita reabre do ponto em que foi deixada.
+- **Estado de carregamento** com Skeleton do MUI (animação wave).
+- **Notificações de erro** com `react-hot-toast`.
+- **Layout responsivo**: 4, 3, 2 ou 1 cards por linha conforme a largura da tela; no celular, os ingredientes abrem abaixo do modal.
+
+## Tecnologias
+
+- [React 19](https://react.dev)
+- [Vite](https://vite.dev)
+- [Material UI](https://mui.com) (`TextField` e `Skeleton`)
+- [react-hot-toast](https://react-hot-toast.com)
+- CSS puro, com variáveis de cor em `:root`
+- Fontes [Fraunces](https://fonts.google.com/specimen/Fraunces) e [Nunito](https://fonts.google.com/specimen/Nunito), via Google Fonts
+- [Oxlint](https://oxc.rs) para lint
+- Deploy no GitHub Pages com GitHub Actions
+
+## Como rodar localmente
+
+Pré-requisito: [Node.js](https://nodejs.org) 20 ou superior.
+
+```bash
+# clonar o repositório
+git clone https://github.com/NicolasSG/recipe-app-learning.git
+cd recipe-app-learning/app-receitas
+
+# instalar as dependências
+npm install
+
+# iniciar o servidor de desenvolvimento
+npm run dev
+```
+
+## Scripts
+
+| Comando           | Descrição                                   |
+| ----------------- | ------------------------------------------- |
+| `npm run dev`     | Servidor de desenvolvimento com HMR         |
+| `npm run build`   | Gera a versão de produção em `dist/`        |
+| `npm run preview` | Serve localmente a versão de produção       |
+| `npm run lint`    | Roda o Oxlint                               |
+
+## Estrutura
 
 ```
-projetos/
-├── javascript/          # Projeto 1: JavaScript Vanilla
-│   ├── index.html
-│   ├── styles.css
-│   ├── scripts.js
-│   ├── README.md
-│   └── propostaProjeto.md
-├── react/               # Projeto 2: React
-│   └── README-REACT.md
-├── .gitignore
-└── README.md
+app-receitas/
+├── index.html
+├── vite.config.js
+└── src/
+    ├── App.jsx              # estado principal, busca e filtros
+    ├── App.css              # estilos e variáveis de cor
+    ├── index.css            # estilos globais e fontes
+    ├── utils.js             # chamadas à TheMealDB API
+    ├── context/             # contexto com a lista de categorias
+    └── components/
+        ├── Card.jsx         # card de receita
+        ├── CardModal.jsx    # modal com detalhes e ingredientes
+        ├── CardSkeleton.jsx # skeleton de carregamento
+        └── Categories.jsx   # botão de categoria
 ```
 
----
+## Deploy
 
-## 🚀 Projeto 1: App de Receitas em JavaScript
+O deploy é automático: a cada push na branch `master` que altere `app-receitas/`, o workflow em `.github/workflows/deploy.yml` faz o build e publica no GitHub Pages. O `base` do Vite está configurado como `/recipe-app-learning/` para funcionar nesse endereço.
 
-**Local:** `/javascript/`
+## Créditos
 
-### 📝 Sobre
-Um projeto guiado onde o **HTML e CSS já estão prontos**. Seu trabalho é implementar toda a lógica em JavaScript: buscar dados, renderizar na tela, tratar erros e interações.
-
-### 🎯 Objetivos
-- Dominar `async/await` com consumo de APIs
-- Manipulação eficiente do DOM
-- Tratamento de erros em operações assíncronas
-- Traduzir requisitos em código funcional
-
-### 📚 Ver mais em [javascript/README.md](javascript/README.md) e [javascript/propostaProjeto.md](javascript/propostaProjeto.md)
-
----
-
-## ⚛️ Projeto 2: App de Receitas em React
-
-**Local:** `/react/`
-
-### 📝 Sobre
-Um projeto mais autônomo e maduro. Aqui você constrói **do zero**: setup do projeto, arquitetura de pastas, componentes, gerenciamento de estado — tudo na sua mão.
-
-### 🎯 Objetivos
-- Componentização e reuso eficiente
-- Gerenciamento de estado com ContextAPI ou hooks
-- Organização de código em camadas
-- Integração com APIs de forma profissional
-- Estilização com Material-UI (ou outra biblioteca)
-
-### 📚 Ver mais em [react/README-REACT.md](react/README-REACT.md)
-
----
-
-## 🔄 Como Usar Este Repositório
-
-1. **Escolha seu ponto de partida:**
-   - Comece em `/javascript/` se quer um guia estruturado
-   - Vá direto para `/react/` se prefere mais autonomia
-
-2. **Leia a proposta do projeto:**
-   - Cada pasta tem um `README.md` com requisitos e instruções
-
-3. **Desenvolva ao seu ritmo:**
-   - Trabalhe nos requisitos de forma autossuficiente
-   - Use os recursos disponíveis e referências para avançar
-
-4. **Transição (opcional):**
-   - Completou JavaScript? Passe para React com a experiência acumulada
-
----
-
-## 🛠 Tecnologias
-
-### JavaScript
-- Vanilla JavaScript (ES6+)
-- TheMealDB API
-- HTML/CSS pronto
-
-### React
-- React + Vite
-- Material-UI (opcional, mas recomendado)
-- TheMealDB API
-- Organização em camadas
-
----
-
-**Bom código! 🚀**
+- Dados e imagens fornecidos pela [TheMealDB](https://www.themealdb.com).
+- Desenvolvido por [Nicolas](https://github.com/NicolasSG).
