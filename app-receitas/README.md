@@ -1,6 +1,6 @@
 # 🍽️ Receitas do Mundo
 
-Aplicação web para explorar receitas de vários países, buscar por nome, filtrar por categoria e acompanhar o passo a passo marcando os ingredientes. Projeto de portfólio desenvolvido com React, consumindo a [TheMealDB API](https://www.themealdb.com).
+Aplicação web para explorar receitas de vários países, buscar por nome, filtrar por categoria e acompanhar o passo a passo marcando os ingredientes. Desenvolvido com React, consumindo a [TheMealDB API](https://www.themealdb.com).
 
 **Demo:** https://nicolassg.github.io/recipe-app-learning/
 
