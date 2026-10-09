@@ -1,6 +1,16 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 function CardModal({ recipe, handleCloseModal, setStartRecipe, startRecipe }) {
+  const sideRef = useRef(null);
+
+  // trava o scroll da página enquanto o modal está aberto
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
   const [visible, setVisible] = useState(
     () => !localStorage.getItem(`app-receitas.recipe.${recipe.idMeal}`),
   );
@@ -57,50 +67,80 @@ function CardModal({ recipe, handleCloseModal, setStartRecipe, startRecipe }) {
   }
 
   return (
-    <div
-      key={recipe.idMeal}
-      className="recipe recipe__modal"
-      onClick={handleCloseModal}
-    >
-      <button className="recipe__modal_close-button">X</button>
-      <h3 className="recipe__title">{recipe.strMeal}</h3>
-      <img className="recipe__img" src={recipe.strMealThumb} alt="" />
-      <p>{recipe.strInstructions}</p>
-      {visible && (
+    <div key={recipe.idMeal} className="recipe recipe__modal">
+      <div className="recipe__modal-main">
         <button
-          className="recipe__start-button"
-          onClick={(e) => {
-            e.stopPropagation(); //evita fechar o modal
-            setStartRecipe(true);
-            setVisible(false);
-          }}
+          className="recipe__modal_close-button"
+          aria-label="Fechar"
+          onClick={handleCloseModal}
         >
-          Iniciar receita
+          X
         </button>
-      )}
-      {startRecipe && (
-        <ul>
-          <p className="recipe__ingredients-title">Ingredientes:</p>
-          {ingredientList.map((ingredient, index) => (
-            <li>
-              <input
-                type="checkbox"
-                id={ingredient}
-                value={ingredient}
-                checked={getChecked(ingredient)}
-                onChange={() => updateLocalStorage(ingredient, recipe.idMeal)}
-                onClick={(e) => {
-                  e.stopPropagation(); //evita fechar o modal
+        <img
+          className="recipe__modal-img"
+          src={recipe.strMealThumb}
+          alt=""
+        />
+        <div className="recipe__modal-body">
+          <h3 className="recipe__modal-title">{recipe.strMeal}</h3>
+          <div
+            className={`recipe__start-wrapper${visible ? "" : " recipe__start-wrapper--hidden"}`}
+          >
+            <div className="recipe__start-inner">
+              <button
+                className="recipe__start-button"
+                tabIndex={visible ? 0 : -1}
+                onClick={() => {
+                  // grava já ao iniciar, para a receita reabrir com os ingredientes visíveis
+                  localStorage.setItem(
+                    `app-receitas.recipe.${recipe.idMeal}`,
+                    JSON.stringify(checkedIngredients),
+                  );
                   setStartRecipe(true);
+                  setVisible(false);
+                  // em telas pequenas os ingredientes abrem embaixo: rola até eles quando a animação termina
+                  if (window.matchMedia("(max-width: 720px)").matches) {
+                    setTimeout(() => {
+                      sideRef.current?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "nearest",
+                      });
+                    }, 650);
+                  }
                 }}
-              />
-              <label
-                for={ingredient}
-              >{`${ingredient} (${measureList[index]})`}</label>
-            </li>
-          ))}
-        </ul>
-      )}
+              >
+                Iniciar receita
+              </button>
+            </div>
+          </div>
+          <p>{recipe.strInstructions}</p>
+        </div>
+      </div>
+      <aside
+        ref={sideRef}
+        className={`recipe__modal-side${startRecipe ? " recipe__modal-side--open" : ""}`}
+        aria-hidden={!startRecipe}
+      >
+        <div className="recipe__modal-side-inner">
+          <p className="recipe__ingredients-title">Ingredientes</p>
+          <ul className="recipe__ingredients-list">
+            {ingredientList.map((ingredient, index) => (
+              <li key={ingredient}>
+                <input
+                  type="checkbox"
+                  id={ingredient}
+                  value={ingredient}
+                  checked={getChecked(ingredient)}
+                  onChange={() => updateLocalStorage(ingredient, recipe.idMeal)}
+                />
+                <label
+                  htmlFor={ingredient}
+                >{`${ingredient} (${measureList[index]})`}</label>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </aside>
     </div>
   );
 }

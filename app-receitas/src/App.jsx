@@ -12,13 +12,16 @@ import { Toaster, toast } from "react-hot-toast";
 import CardSkeleton from "./components/CardSkeleton.jsx";
 import CardModal from "./components/CardModal.jsx";
 import { RecipesContext } from "./context/RecipesContext.jsx";
+import Box from "@mui/material/Box";
+import TextField from "@mui/material/TextField";
 
 function App() {
   const [recipes, setRecipes] = useState([]);
   const { categories } = useContext(RecipesContext);
   const [searchTxt, setSearchTxt] = useState("");
-  const [selectedCategorie, setSelectedCategorie] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [showSearchError, setShowSearchError] = useState(false);
+  const [selectedCategorie, setSelectedCategorie] = useState("Beef");
+  const [loading, setLoading] = useState(true);
   const [selectedRecipe, setSelectedRecipe] = useState("");
   const [startRecipe, setStartRecipe] = useState(false);
 
@@ -51,11 +54,16 @@ function App() {
 
   function handleChange(event) {
     setSearchTxt(event.target.value);
+    setShowSearchError(false);
   }
 
   function handleSearchClick(e) {
     e.preventDefault();
-    searchTxt ? searchRecipes() : toast.error("ERRO FATAL");
+    if (searchTxt.length < 3) {
+      setShowSearchError(true);
+      return;
+    }
+    searchRecipes();
   }
 
   function handleCloseModal() {
@@ -77,6 +85,14 @@ function App() {
       setLoading(false);
     }
   }
+
+  // carrega a categoria Beef ao abrir a página
+  useEffect(() => {
+    fetchRecipesByCategory("Beef")
+      .then(setRecipes)
+      .catch(() => toast.error("Erro de conexão, tente novamente"))
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <>
@@ -116,28 +132,62 @@ function App() {
       <main className={"main"}>
         <section className="search-section">
           <form className="search-wrapper">
-            <input
-              type="text"
-              id="search-input"
-              className="search-input"
+            <TextField
+              id="outlined-search"
+              type="search"
+              size="small"
+              fullWidth
+              sx={{
+                "& .MuiInputBase-input": {
+                  fontFamily: "inherit",
+                  color: "var(--color-input-text)",
+                  fontSize: "14px",
+                  textAlign: "center",
+                },
+                "& .MuiInputBase-input::placeholder": { fontSize: "13px" },
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "var(--color-white)",
+                  borderRadius: "15px",
+                },
+                "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline":
+                  { borderColor: "var(--color-primary)" },
+              }}
               placeholder="Buscar receita... ex: pasta, chicken, soup"
-              aria-label="Campo de busca de receitas"
+              inputProps={{ "aria-label": "Campo de busca de receitas" }}
+              error={showSearchError}
+              InputProps={{
+                endAdornment: showSearchError && (
+                  <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <circle cx="12" cy="12" r="12" fill="var(--color-error)" />
+                    <rect
+                      x="10.8"
+                      y="5.5"
+                      width="2.4"
+                      height="8"
+                      rx="1.2"
+                      fill="#fff"
+                    />
+                    <circle cx="12" cy="17.5" r="1.4" fill="#fff" />
+                  </svg>
+                ),
+              }}
               value={searchTxt}
               onChange={handleChange}
               required
             />
-            {/*isso tá ok?*/}
-            {searchTxt.length > 0 && searchTxt.length < 3 && (
-              <span className="search__error-msg">
-                Digite pelo menos 3 caracteres
-              </span>
-            )}
+            <span className="search__error-msg" role="alert">
+              {showSearchError && "Digite pelo menos 3 caracteres"}
+            </span>
             <button
               id="search-btn"
               className="search-btn"
               aria-label="Buscar"
               onClick={handleSearchClick}
-              disabled={searchTxt.length > 0 && searchTxt.length < 3}
             >
               Buscar
             </button>
@@ -146,7 +196,7 @@ function App() {
 
         {/* <!-- Filtros de categoria --> */}
         <section className="categories-section">
-          <h2 className="section-title">Categorias</h2>
+          <h2 className="section-title section-heading">Categorias</h2>
           <div
             id="categories"
             className="categories"
@@ -156,12 +206,8 @@ function App() {
             {categories &&
               categories.map((categorie) => (
                 <Categories
-                  id={categorie.idCategory}
-                  className={
-                    selectedCategorie === categorie.strCategory
-                      ? "categorie__button-active"
-                      : ""
-                  }
+                  key={categorie.idCategory}
+                  isActive={selectedCategorie === categorie.strCategory}
                   name={categorie.strCategory}
                   categorieFunction={() =>
                     handleCategorieButton(categorie.strCategory)
@@ -173,7 +219,7 @@ function App() {
 
         {/* <!-- Grid de receitas --> */}
         <section className="recipes-section">
-          <h2 id="recipes-title" className="section-title">
+          <h2 id="recipes-title" className="section-title section-heading">
             Receitas
           </h2>
           {/* tentativa de adicionar um loading kkkkk */}
@@ -209,8 +255,30 @@ function App() {
       </main>
       <footer className="footer">
         <p className="footer-text">
-          Dados fornecidos pela{" "}
-          <a href="https://www.themealdb.com" target="_blank" rel="noopener">
+          Desenvolvido por{" "}
+          <a
+            href="https://www.linkedin.com/in/nicolas-sg-br/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Nicolas
+          </a>
+          {" · "}
+          <a
+            href="https://github.com/NicolasSG/recipe-app-learning"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            GitHub
+          </a>
+        </p>
+        <p className="footer-text">
+          Dados fornecidos por{" "}
+          <a
+            href="https://www.themealdb.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             TheMealDB
           </a>
         </p>

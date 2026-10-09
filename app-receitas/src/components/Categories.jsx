@@ -1,8 +1,8 @@
-function Categories({ id, name, categorieFunction, className }) {
+function Categories({ name, categorieFunction, isActive }) {
   return (
     <button
-      key={id}
-      className={`${className} categorie__button`}
+      className={`categorie__button${isActive ? " categorie__button-active" : ""}`}
+      aria-pressed={isActive}
       onClick={categorieFunction}
     >
       {name}
