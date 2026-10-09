@@ -10,6 +10,17 @@
       href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700&family=Nunito:wght@400;600;700&display=swap"
       rel="stylesheet"
     />
+    <script>
+      // aplica o tema salvo (ou o do sistema) antes da primeira renderização, evitando "flash"
+      try {
+        var saved = localStorage.getItem("app-receitas.theme");
+        document.documentElement.dataset.theme =
+          saved ||
+          (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      } catch (e) {
+        document.documentElement.dataset.theme = "light";
+      }
+    </script>
     <title>app-receitas</title>
   </head>
   <body>

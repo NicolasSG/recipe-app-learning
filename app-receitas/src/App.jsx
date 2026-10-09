@@ -4,6 +4,7 @@ import {
   fetchCategories,
   fetchRecipesByName,
   fetchRecipesByCategory,
+  fetchRandomRecipes,
   fetchRecipesDetails,
 } from "../src/utils.js";
 import Card from "./components/Card.jsx";
@@ -20,10 +21,44 @@ function App() {
   const { categories } = useContext(RecipesContext);
   const [searchTxt, setSearchTxt] = useState("");
   const [showSearchError, setShowSearchError] = useState(false);
-  const [selectedCategorie, setSelectedCategorie] = useState("Beef");
+  const [selectedCategorie, setSelectedCategorie] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedRecipe, setSelectedRecipe] = useState("");
   const [startRecipe, setStartRecipe] = useState(false);
+  // o tema inicial já foi aplicado no <html> pelo script do index.html
+  const [theme, setTheme] = useState(
+    () => document.documentElement.dataset.theme || "light",
+  );
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
+
+  // sem escolha manual salva, acompanha o tema do sistema/navegador em tempo real
+  useEffect(() => {
+    const media = matchMedia("(prefers-color-scheme: dark)");
+    function handleSystemChange(event) {
+      try {
+        if (localStorage.getItem("app-receitas.theme")) return;
+      } catch {
+        // localStorage indisponível: segue o sistema
+      }
+      setTheme(event.matches ? "dark" : "light");
+    }
+    media.addEventListener("change", handleSystemChange);
+    return () => media.removeEventListener("change", handleSystemChange);
+  }, []);
+
+  // só a escolha manual no botão fica salva
+  function toggleTheme() {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    try {
+      localStorage.setItem("app-receitas.theme", next);
+    } catch {
+      // localStorage indisponível: o tema só vale nesta sessão
+    }
+  }
 
   async function recipeDetails(recipes) {
     const res = await fetchRecipesDetails(recipes.idMeal);
@@ -86,9 +121,9 @@ function App() {
     }
   }
 
-  // carrega a categoria Beef ao abrir a página
+  // carrega quatro receitas aleatórias ao abrir a página
   useEffect(() => {
-    fetchRecipesByCategory("Beef")
+    fetchRandomRecipes(4)
       .then(setRecipes)
       .catch(() => toast.error("Erro de conexão, tente novamente"))
       .finally(() => setLoading(false));
@@ -118,6 +153,13 @@ function App() {
         }}
       />
       <header className="header">
+        <button
+          type="button"
+          className="theme-toggle"
+          onClick={toggleTheme}
+        >
+          {theme === "dark" ? "Tema claro" : "Tema escuro"}
+        </button>
         <div className="header__inner">
           <h1 className="header__title">
             <span className="header__icon">🍽️</span>
@@ -146,11 +188,18 @@ function App() {
                 },
                 "& .MuiInputBase-input::placeholder": { fontSize: "13px" },
                 "& .MuiOutlinedInput-root": {
-                  backgroundColor: "var(--color-white)",
+                  backgroundColor: "var(--color-surface)",
                   borderRadius: "15px",
                 },
+                "& .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "var(--color-input-border)",
+                },
+                "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline":
+                  { borderColor: "var(--color-muted)" },
                 "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline":
                   { borderColor: "var(--color-primary)" },
+                "& .MuiOutlinedInput-root.Mui-error .MuiOutlinedInput-notchedOutline":
+                  { borderColor: "var(--color-error)" },
               }}
               placeholder="Buscar receita... ex: pasta, chicken, soup"
               inputProps={{ "aria-label": "Campo de busca de receitas" }}

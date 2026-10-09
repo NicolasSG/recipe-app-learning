@@ -43,6 +43,25 @@ export async function fetchRecipesByCategory(category) {
   // TODO
 }
 
+async function fetchRandomRecipe() {
+  return fetch(`${BASE_URL}/random.php`)
+    .then((res) => res.json())
+    .then((data) => data.meals[0]);
+}
+
+// o endpoint devolve uma receita por chamada e pode repetir; completa até ter `count` diferentes
+export async function fetchRandomRecipes(count) {
+  const recipes = new Map();
+  for (let attempt = 0; attempt < 3 && recipes.size < count; attempt++) {
+    const missing = count - recipes.size;
+    const batch = await Promise.all(
+      Array.from({ length: missing }, fetchRandomRecipe),
+    );
+    batch.forEach((recipe) => recipes.set(recipe.idMeal, recipe));
+  }
+  return [...recipes.values()];
+}
+
 export async function fetchRecipesDetails(category) {
   return fetch(`${BASE_URL}/lookup.php?i=${category}`)
     .then((res) => {

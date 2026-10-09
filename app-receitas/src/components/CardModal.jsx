@@ -11,6 +11,15 @@ function CardModal({ recipe, handleCloseModal, setStartRecipe, startRecipe }) {
     };
   }, []);
 
+  // fecha o modal com a tecla ESC
+  useEffect(() => {
+    function handleKeyDown(event) {
+      if (event.key === "Escape") handleCloseModal();
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [handleCloseModal]);
+
   const [visible, setVisible] = useState(
     () => !localStorage.getItem(`app-receitas.recipe.${recipe.idMeal}`),
   );
